@@ -80,36 +80,30 @@ namespace HexMapRenderer
             var i = (int)Math.Floor((x * 2f) / (W + w));
             var j = (int)Math.Floor((y * 2f) / h);
 
-            if (i >= _tiles.GetLength(0)) return;
-            if (i < 0) return;
-            if (j >= _tiles.GetLength(1)) return;
-            if (j < 0) return;
-
             var u = x - (i * ((W + w) * 0.5f));
-            var v = y - (j * h * 0.5f);
+            var v = y - (j * h * 0.5f);            
 
             var isGreenArea = (u < (W - w) * 0.5f);
             if (isGreenArea) {
-                var is_i_Even = IsEven(ref i);
+                var isUpper = (IsEven(ref i) && IsEven(ref j));
 
-                var isUpper = (is_i_Even && IsEven(ref j));
-
-                u = (2f * u) / (W - w);
-                v = (2f * v) / h;
+                //u = (2f * u) / (W - w);
+                //v = (2f * v) / h;
 
                 if ((isUpper && ((1f - v) > u) || (!isUpper && v < u)))
-                    i--;
-
-                if (!is_i_Even)
-                    j--;
-
-                j = (int)Math.Floor(j * 0.5);
+                    i--;                
             }
+
+            if (!IsEven(ref i))
+                j--;
+
+            j = (int)Math.Floor(j * 0.5);
 
             if (i >= _tiles.GetLength(0)) return;
             if (i < 0) return;
             if (j >= _tiles.GetLength(1)) return;
             if (j < 0) return;
+          //  ClampIndices(ref i, ref j);
 
             _selectedTile = _tiles[i, j];
 

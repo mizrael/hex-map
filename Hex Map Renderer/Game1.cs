@@ -29,6 +29,8 @@ namespace HexMapRenderer
 
         KeyboardState _lastState;
 
+        SpriteFont _font;
+
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -64,7 +66,11 @@ namespace HexMapRenderer
             
             _hexMap = new HexMap(5, 5, tileSize, hexTexture);
 
+            _hexMap.SelectTile(new Vector2(175, 280));
+
             _halfScreenSize = new Vector3(GraphicsDevice.Viewport.Width * 0.5f, GraphicsDevice.Viewport.Height * 0.5f, 0);
+
+            _font = this.Content.Load<SpriteFont>(@"Commodore");
         }
 
         /// <summary>
@@ -85,7 +91,6 @@ namespace HexMapRenderer
         {
             var mouseState = Mouse.GetState();
             _hexMap.SelectTile(new Vector2(mouseState.X, mouseState.Y));
-
 
             var cameraOffset = 5f;
 
@@ -124,9 +129,12 @@ namespace HexMapRenderer
             GraphicsDevice.Clear(Color.Black);
 
             //spriteBatch.Begin(SpriteSortMode.BackToFront, null, null, null, null, null, _cameraMatrix);            
-            spriteBatch.Begin();
+            spriteBatch.Begin();            
 
             _hexMap.Draw(spriteBatch);
+
+            var mouseState = Mouse.GetState();
+            FontHelpers.Print(spriteBatch, _font, string.Format("x: {0}, y: {1}", mouseState.X, mouseState.Y) , new Vector2(500, 0), 0.7f, Color.White, false);
 
             spriteBatch.End();
 
