@@ -64,9 +64,9 @@ namespace HexMapRenderer
             var hexTexture = this.Content.Load<Texture2D>("tiles");
             var tileSize = new Vector2(hexTexture.Width / 5, hexTexture.Height / 2);            
             
-            _hexMap = new HexMap(5, 5, tileSize, hexTexture);
+            _hexMap = new HexMap(10, 10, tileSize, hexTexture);
 
-            _hexMap.SelectTile(new Vector2(175, 280));
+            _hexMap.SelectTile(new Vector2(153, 116));
 
             _halfScreenSize = new Vector3(GraphicsDevice.Viewport.Width * 0.5f, GraphicsDevice.Viewport.Height * 0.5f, 0);
 

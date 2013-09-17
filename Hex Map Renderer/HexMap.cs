@@ -77,24 +77,28 @@ namespace HexMapRenderer
             var W = _tileSize.X;
             var w = _tileSize.X * 0.75f;
 
-            var i = (int)Math.Floor((x * 2f) / (W + w));
+            var k = (W + w) * .5f;
+
+            var i = (int)Math.Floor(x / k); 
             var j = (int)Math.Floor((y * 2f) / h);
 
-            var u = x - (i * ((W + w) * 0.5f));
-            var v = y - (j * h * 0.5f);            
+            var u = x - (k * i);
+            var v = y - (h * 0.5f * j);            
 
+            var is_i_even = IsEven(ref i);
+            
             var isGreenArea = (u < (W - w) * 0.5f);
             if (isGreenArea) {
-                var isUpper = (IsEven(ref i) && IsEven(ref j));
+                var isUpper = (is_i_even && IsEven(ref j));
 
-                //u = (2f * u) / (W - w);
-                //v = (2f * v) / h;
+                u = (2f * u) / (W - w);
+                v = (2f * v) / h;
 
                 if ((isUpper && ((1f - v) > u) || (!isUpper && v < u)))
                     i--;                
             }
 
-            if (!IsEven(ref i))
+            if (!is_i_even)
                 j--;
 
             j = (int)Math.Floor(j * 0.5);
