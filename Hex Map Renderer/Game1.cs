@@ -133,6 +133,8 @@ namespace HexMapRenderer
 
             _hexMap.Draw(spriteBatch);
 
+            _hexMap.DrawDebug(spriteBatch);
+
             var mouseState = Mouse.GetState();
             FontHelpers.Print(spriteBatch, _font, string.Format("x: {0}, y: {1}", mouseState.X, mouseState.Y) , new Vector2(500, 0), 0.7f, Color.White, false);
 

@@ -57,6 +57,43 @@ namespace HexMapRenderer
             }
         }
 
+        public void DrawDebug(SpriteBatch spriteBatch) {
+            var h = _tileSize.Y;
+            var hOver2 = h * .5f;
+
+            var W = _tileSize.X;
+            var w = _tileSize.X * 0.5f;            
+
+            var k = (W-w) * 0.5f;
+
+            var mapCullingBounds = ComputeMapCulling();
+
+            for (int x = mapCullingBounds.X; x != mapCullingBounds.Width; ++x) {
+                var currTile = _tiles[x, 0];
+
+                var firstLineX = k + currTile.Position.X;
+
+                var pos = new Vector2(firstLineX, 0f);
+                spriteBatch.DrawLine(pos, 800, MathHelper.PiOver2, Color.GreenYellow);
+
+                pos = new Vector2(firstLineX + w, 0f);
+                spriteBatch.DrawLine(pos, 800, MathHelper.PiOver2, Color.GreenYellow);               
+            }
+
+            for (int y = mapCullingBounds.Y; y != mapCullingBounds.Height; ++y)
+            {
+                var currTile = _tiles[0, y];
+
+                var firstLineY = currTile.Position.Y;
+
+                var pos = new Vector2(0f, firstLineY);
+                spriteBatch.DrawLine(pos, 800, 0f, Color.GreenYellow);
+
+                pos = new Vector2(0f, firstLineY + hOver2);
+                spriteBatch.DrawLine(pos, 800, 0f, Color.GreenYellow);
+            }
+        }
+
         /// <summary>
         /// WIP
         /// http://gamedev.stackexchange.com/questions/20742/how-can-i-implement-hexagonal-tilemap-picking-in-xna
@@ -75,7 +112,7 @@ namespace HexMapRenderer
 
             var h = _tileSize.Y;
             var W = _tileSize.X;
-            var w = _tileSize.X * 0.75f;
+            var w = _tileSize.X * 0.5f;
 
             var k = (W + w) * .5f;
 
@@ -90,12 +127,14 @@ namespace HexMapRenderer
             var isGreenArea = (u < (W - w) * 0.5f);
             if (isGreenArea) {
                 var isUpper = (is_i_even && IsEven(ref j));
-
                 u = (2f * u) / (W - w);
                 v = (2f * v) / h;
 
-                if ((isUpper && ((1f - v) > u) || (!isUpper && v < u)))
-                    i--;                
+                if ((!isUpper && v < u) || (isUpper && (1f - v) > u))
+                {
+                    i--;
+                    is_i_even = !is_i_even;
+                }
             }
 
             if (!is_i_even)
@@ -107,20 +146,10 @@ namespace HexMapRenderer
             if (i < 0) return;
             if (j >= _tiles.GetLength(1)) return;
             if (j < 0) return;
-          //  ClampIndices(ref i, ref j);
 
             _selectedTile = _tiles[i, j];
 
             _selectedTile.Selected = true;
-        }
-
-        private void ClampIndices(ref int i, ref int j) {
-            if (i >= _tiles.GetLength(0))
-                i = _tiles.GetLength(0) - 1;
-            if (i < 0) i = 0;
-            if (j >= _tiles.GetLength(1))
-                j = _tiles.GetLength(1) - 1;
-            if (j < 0) j = 0;
         }
 
         private static bool IsEven(ref int value) {
