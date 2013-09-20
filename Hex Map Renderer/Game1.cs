@@ -21,20 +21,20 @@ namespace HexMapRenderer
         
         HexMap _hexMap;
 
-        Vector2 _cameraPos = Vector2.Zero;
-        float _cameraZoom = 1f;
-        Matrix _cameraMatrix;
-
         Vector3 _halfScreenSize;
 
-        KeyboardState _lastState;
-
         SpriteFont _font;
+
+        CameraService _camera;
 
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+
+            _camera = new CameraService(this);
+            this.Components.Add(_camera);
+            this.Services.AddService(typeof(CameraService), _camera);
         }
 
         /// <summary>
@@ -64,9 +64,7 @@ namespace HexMapRenderer
             var hexTexture = this.Content.Load<Texture2D>("tiles");
             var tileSize = new Vector2(hexTexture.Width / 5, hexTexture.Height / 2);            
             
-            _hexMap = new HexMap(10, 10, tileSize, hexTexture);
-
-            _hexMap.SelectTile(new Vector2(153, 116));
+            _hexMap = new HexMap(this, 30, 30, tileSize, hexTexture);            
 
             _halfScreenSize = new Vector3(GraphicsDevice.Viewport.Width * 0.5f, GraphicsDevice.Viewport.Height * 0.5f, 0);
 
@@ -89,33 +87,10 @@ namespace HexMapRenderer
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            var mouseState = Mouse.GetState();
-            _hexMap.SelectTile(new Vector2(mouseState.X, mouseState.Y));
+            var mouseState = Mouse.GetState();        
 
-            var cameraOffset = 5f;
-
-            var keyboardState = Keyboard.GetState();
-
-            if (_lastState.IsKeyDown(Keys.W) && keyboardState.IsKeyDown(Keys.W))
-                _cameraPos.Y -= cameraOffset;
-            else if (_lastState.IsKeyDown(Keys.S) && keyboardState.IsKeyDown(Keys.S))
-                _cameraPos.Y += cameraOffset;
-
-            if (_lastState.IsKeyDown(Keys.A) && keyboardState.IsKeyDown(Keys.A))
-                _cameraPos.X -= cameraOffset;
-            else if (_lastState.IsKeyDown(Keys.D) && keyboardState.IsKeyDown(Keys.D))
-                _cameraPos.X += cameraOffset;
-
-            if (_lastState.IsKeyDown(Keys.Q) && keyboardState.IsKeyDown(Keys.Q))
-                _cameraZoom += 0.01f;
-            else if (_lastState.IsKeyDown(Keys.E) && keyboardState.IsKeyDown(Keys.E))
-                _cameraZoom -= 0.01f;
-
-            _lastState = keyboardState;
-
-            _cameraMatrix = Matrix.CreateTranslation(new Vector3(-_cameraPos.X, -_cameraPos.Y, 0)) *                                                    
-                                                     Matrix.CreateScale(new Vector3(_cameraZoom, _cameraZoom, 1)) *
-                                                     Matrix.CreateTranslation(_halfScreenSize);            
+            var mousePosVec = new Vector2(mouseState.X, mouseState.Y);
+            _hexMap.SelectTile(ref mousePosVec);
 
             base.Update(gameTime);
         }
@@ -128,12 +103,12 @@ namespace HexMapRenderer
         {
             GraphicsDevice.Clear(Color.Black);
 
-            //spriteBatch.Begin(SpriteSortMode.BackToFront, null, null, null, null, null, _cameraMatrix);            
-            spriteBatch.Begin();            
+            spriteBatch.Begin(SpriteSortMode.BackToFront, null, null, null, null, null, _camera.Matrix);            
+            //spriteBatch.Begin();            
 
             _hexMap.Draw(spriteBatch);
 
-            _hexMap.DrawDebug(spriteBatch);
+            _hexMap.DrawDebug(spriteBatch, _font);
 
             var mouseState = Mouse.GetState();
             FontHelpers.Print(spriteBatch, _font, string.Format("x: {0}, y: {1}", mouseState.X, mouseState.Y) , new Vector2(500, 0), 0.7f, Color.White, false);

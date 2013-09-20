@@ -108,6 +108,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CameraService.cs" />
     <Compile Include="FontHelpers.cs" />
     <Compile Include="HexMap.cs" />
     <Compile Include="Primitives2D.cs" />

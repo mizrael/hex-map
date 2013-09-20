@@ -26,15 +26,19 @@ namespace HexMapRenderer
 
         private HexTile _selectedTile;
 
+        private CameraService _camera;
+
         #endregion Members
 
-        public HexMap(int tileCountX, int tileCountY, Vector2 tileSize, Texture2D tilesAsset)
+        public HexMap(Game game, int tileCountX, int tileCountY, Vector2 tileSize, Texture2D tilesAsset)
         {
             _tileSize = tileSize;
             _hexOffset = new Vector2(_tileSize.X * 0.75f, _tileSize.Y * -0.5f);
 
             _tiles = new HexTile[tileCountX, tileCountY];
             _tilesAsset = tilesAsset;
+
+            _camera = game.Services.GetService(typeof(CameraService)) as CameraService;
 
             SetupTiles();
         }
@@ -57,7 +61,7 @@ namespace HexMapRenderer
             }
         }
 
-        public void DrawDebug(SpriteBatch spriteBatch) {
+        public void DrawDebug(SpriteBatch spriteBatch, SpriteFont font) {
             var h = _tileSize.Y;
             var hOver2 = h * .5f;
 
@@ -92,6 +96,16 @@ namespace HexMapRenderer
                 pos = new Vector2(0f, firstLineY + hOver2);
                 spriteBatch.DrawLine(pos, 800, 0f, Color.GreenYellow);
             }
+
+            for (int y = mapCullingBounds.Y; y != mapCullingBounds.Height; ++y)
+            {
+                for (int x = mapCullingBounds.X; x != mapCullingBounds.Width; ++x)
+                {
+                    var currTile = _tiles[x, y];
+
+                    FontHelpers.Print(spriteBatch, font, string.Format("{0},{1}", x, y), currTile.Position + _tileSize * .5f, 0.5f, Color.White, true);
+                }
+            }
         }
 
         /// <summary>
@@ -99,7 +113,7 @@ namespace HexMapRenderer
         /// http://gamedev.stackexchange.com/questions/20742/how-can-i-implement-hexagonal-tilemap-picking-in-xna
         /// </summary>
         /// <param name="mousePos"></param>
-        public void SelectTile(Vector2 mousePos) 
+        public void SelectTile(ref Vector2 mousePos) 
         {
             if (null != _selectedTile)
             {
@@ -107,8 +121,8 @@ namespace HexMapRenderer
                 _selectedTile = null;
             }
 
-            var x = mousePos.X;
-            var y = mousePos.Y;
+            var x = mousePos.X + _camera.Position.X;
+            var y = mousePos.Y + _camera.Position.Y;
 
             var h = _tileSize.Y;
             var W = _tileSize.X;
@@ -122,15 +136,17 @@ namespace HexMapRenderer
             var u = x - (k * i);
             var v = y - (h * 0.5f * j);            
 
-            var is_i_even = IsEven(ref i);
-            
+            var is_i_even = IsEven(ref i);           
+
             var isGreenArea = (u < (W - w) * 0.5f);
             if (isGreenArea) {
-                var isUpper = (is_i_even && IsEven(ref j));
+                var is_j_even = IsEven(ref j);
+
+                var isUpper = (0 == ((i+j) & 1));
                 u = (2f * u) / (W - w);
                 v = (2f * v) / h;
 
-                if ((!isUpper && v < u) || (isUpper && (1f - v) > u))
+                if ((!isUpper && v > u) || (isUpper && (1f - v) > u))
                 {
                     i--;
                     is_i_even = !is_i_even;
@@ -142,12 +158,10 @@ namespace HexMapRenderer
 
             j = (int)Math.Floor(j * 0.5);
 
-            if (i >= _tiles.GetLength(0)) return;
-            if (i < 0) return;
-            if (j >= _tiles.GetLength(1)) return;
-            if (j < 0) return;
+            if (i < 0 || i >= _tiles.GetLength(0)) return;          
+            if (j < 0 || j >= _tiles.GetLength(1)) return;
 
-            _selectedTile = _tiles[i, j];
+            _selectedTile = _tiles[i,j];
 
             _selectedTile.Selected = true;
         }
