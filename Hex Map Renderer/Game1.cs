@@ -20,9 +20,7 @@ namespace HexMapRenderer
         SpriteBatch spriteBatch;
         
         HexMap _hexMap;
-
-        Vector3 _halfScreenSize;
-
+        
         SpriteFont _font;
 
         CameraService _camera;
@@ -61,12 +59,16 @@ namespace HexMapRenderer
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            var hexTexture = this.Content.Load<Texture2D>("tiles");
-            var tileSize = new Vector2(hexTexture.Width / 5, hexTexture.Height / 2);            
+            var hexTexture = this.Content.Load<Texture2D>("dwarven-castle-floor");
+            var tileSize = new Vector2(hexTexture.Width, hexTexture.Height);            
             
-            _hexMap = new HexMap(this, 30, 30, tileSize, hexTexture);            
-
-            _halfScreenSize = new Vector3(GraphicsDevice.Viewport.Width * 0.5f, GraphicsDevice.Viewport.Height * 0.5f, 0);
+            _hexMap = new HexMap(this);
+            _hexMap.Load(new HexMapConfig()
+            {
+                TilesCountX = 30,
+                TilesCountY = 30,
+                TileSize = tileSize
+            }, hexTexture);           
 
             _font = this.Content.Load<SpriteFont>(@"Commodore");
         }
@@ -103,15 +105,15 @@ namespace HexMapRenderer
         {
             GraphicsDevice.Clear(Color.Black);
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront, null, null, null, null, null, _camera.Matrix);            
-            //spriteBatch.Begin();            
-
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _camera.Matrix);            
+          
             _hexMap.Draw(spriteBatch);
 
+#if DEBUG
             _hexMap.DrawDebug(spriteBatch, _font);
-
             var mouseState = Mouse.GetState();
             FontHelpers.Print(spriteBatch, _font, string.Format("x: {0}, y: {1}", mouseState.X, mouseState.Y) , new Vector2(500, 0), 0.7f, Color.White, false);
+#endif
 
             spriteBatch.End();
 

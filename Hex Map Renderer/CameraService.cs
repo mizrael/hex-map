@@ -50,7 +50,7 @@ namespace HexMapRenderer
             _pos3.Y = -Position.Y;
 
             _zoom3.X = Zoom;
-            _zoom3.Y = Zoom;
+            _zoom3.Y = Zoom;            
 
             Matrix = Matrix.CreateTranslation(_pos3) *
                      Matrix.CreateScale(_zoom3);
