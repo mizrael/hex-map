@@ -22,7 +22,14 @@ namespace HexMapRenderer
 
         #endregion Members
 
-        public CameraService(Game game) : base(game) { }
+        public CameraService(Game game) : base(game) {            
+        }
+
+        public override void Initialize()
+        {
+            this.HalfScreenSize = new Vector2(Game.GraphicsDevice.Viewport.Width * 0.5f, 
+                                              Game.GraphicsDevice.Viewport.Height * 0.5f);        
+        }
 
         public override void Update(GameTime gameTime) {
             var cameraOffset = 5f;
@@ -61,6 +68,7 @@ namespace HexMapRenderer
         public Vector2 Position = Vector2.Zero;
         public float Zoom = 1f;
         public Matrix Matrix;
+        public Vector2 HalfScreenSize = Vector2.Zero;
 
         #endregion Properties
     }

@@ -237,22 +237,20 @@ namespace HexMapRenderer
         }
 
         private Rectangle ComputeMapCulling()
-        {
-            var bounding = Rectangle.Empty;
-            
-            var halfScreenSize = new Vector2(_camera.Game.GraphicsDevice.Viewport.Width * 0.5f, _camera.Game.GraphicsDevice.Viewport.Height * 0.5f);
-
-            var midTile = PickTile(ref halfScreenSize);
+        {   
+            var midTile = PickTile(ref _camera.HalfScreenSize);
             if (null == midTile)
                 return _mapFullBounds;
 
             var midTileCenter = midTile.Position + _tileHalfSize;
 
-            bounding.X = (int)Math.Floor((midTileCenter.X - halfScreenSize.X) / _config.TileSize.X);
-            bounding.Y = (int)Math.Floor((midTileCenter.Y - halfScreenSize.Y) / _config.TileSize.Y) ;
+            var bounding = Rectangle.Empty;
 
-            bounding.Width = (int)Math.Ceiling((midTileCenter.X + halfScreenSize.X) / _config.TileSize.X);
-            bounding.Height = (int)Math.Ceiling((midTileCenter.Y + halfScreenSize.Y) / _config.TileSize.Y);
+            bounding.X = (int)Math.Floor((midTileCenter.X - _camera.HalfScreenSize.X) / _k) - 1;
+            bounding.Y = (int)Math.Floor((midTileCenter.Y - _camera.HalfScreenSize.Y) / _config.TileSize.Y) - 1;
+
+            bounding.Width = (int)Math.Floor((midTileCenter.X + _camera.HalfScreenSize.X) / _k) + 1;
+            bounding.Height = (int)Math.Floor((midTileCenter.Y + _camera.HalfScreenSize.Y) / _config.TileSize.Y) + 1;
 
             bounding.X = bounding.X >= 0 ? bounding.X : 0;            
             bounding.Y = bounding.Y >= 0 ? bounding.Y : 0;
