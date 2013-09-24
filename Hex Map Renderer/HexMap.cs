@@ -201,8 +201,8 @@ namespace HexMapRenderer
             var x = screenCoords.X + _camera.Position.X;
             var y = screenCoords.Y + _camera.Position.Y;
 
-            var i = (int)Math.Floor(x / _k);
-            var j = (int)Math.Floor((y * 2f) / _h);
+            var i = (int)Math.Floor((x / _k) / _camera.Zoom);
+            var j = (int)Math.Floor(((y * 2f) / _h) / _camera.Zoom);
 
             var u = x - (_k * i);
             var v = y - (_h * j * 0.5f);
@@ -246,11 +246,11 @@ namespace HexMapRenderer
 
             var bounding = Rectangle.Empty;
 
-            bounding.X = (int)Math.Floor((midTileCenter.X - _camera.HalfScreenSize.X) / _k) - 1;
-            bounding.Y = (int)Math.Floor((midTileCenter.Y - _camera.HalfScreenSize.Y) / _config.TileSize.Y) - 1;
+            bounding.X = (int)Math.Floor(((midTileCenter.X - _camera.HalfScreenSize.X) / _k) / _camera.Zoom) ;
+            bounding.Y = (int)Math.Floor(((midTileCenter.Y - _camera.HalfScreenSize.Y) / _config.TileSize.Y) / _camera.Zoom);
 
-            bounding.Width = (int)Math.Floor((midTileCenter.X + _camera.HalfScreenSize.X) / _k) + 1;
-            bounding.Height = (int)Math.Floor((midTileCenter.Y + _camera.HalfScreenSize.Y) / _config.TileSize.Y) + 1;
+            bounding.Width = (int)Math.Floor((midTileCenter.X + _camera.HalfScreenSize.X) / _k / _camera.Zoom);
+            bounding.Height = (int)Math.Floor((midTileCenter.Y + _camera.HalfScreenSize.Y) / _config.TileSize.Y / _camera.Zoom);        
 
             bounding.X = bounding.X >= 0 ? bounding.X : 0;            
             bounding.Y = bounding.Y >= 0 ? bounding.Y : 0;
