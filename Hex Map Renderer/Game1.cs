@@ -24,6 +24,7 @@ namespace HexMapRenderer
         SpriteFont _font;
 
         CameraService _camera;
+        MapInputController _mapInput;
 
         public Game1()
         {
@@ -33,6 +34,9 @@ namespace HexMapRenderer
             _camera = new CameraService(this);
             this.Components.Add(_camera);
             this.Services.AddService(typeof(CameraService), _camera);
+
+            _mapInput = new MapInputController(this);
+            this.Components.Add(_mapInput);
         }
 
         /// <summary>
@@ -71,6 +75,8 @@ namespace HexMapRenderer
             }, hexTexture);           
 
             _font = this.Content.Load<SpriteFont>(@"Commodore");
+
+            _mapInput.SetMap(_hexMap);
         }
 
         /// <summary>
@@ -89,11 +95,6 @@ namespace HexMapRenderer
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            var mouseState = Mouse.GetState();        
-
-            var mousePosVec = new Vector2(mouseState.X, mouseState.Y);
-            _hexMap.SelectTile(ref mousePosVec);
-
             base.Update(gameTime);
         }
 

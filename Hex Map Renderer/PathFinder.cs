@@ -13,6 +13,7 @@ namespace HexMapRenderer
         public TN LastStep { get; private set; }
         public Path<TN> PreviousSteps { get; private set; }
         public double TotalCost { get; private set; }
+
         private Path(TN lastStep, Path<TN> previousSteps, double totalCost)
         {
             LastStep = lastStep;
@@ -100,27 +101,5 @@ namespace HexMapRenderer
         }
     }
 
-    /***************************************/
-
-    public class Node 
-    {
-        public Node(int x, int y) {
-            this.X = x;
-            this.Y = y;
-        }
-
-        public int X;
-
-        public int Y;    
-
-        public bool Equals(Node node)
-        {
-            return (this.X == node.X && this.Y == node.Y);
-        }
-
-        public override bool Equals(object obj)
-        {
-            return Equals((Node)obj);
-        }
-    }
+   
 }

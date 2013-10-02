@@ -9,9 +9,34 @@ namespace HexMapRenderer
 {
     public class HexTile
     {
-        public Rectangle SourceRectangle;
-        public Vector2 Position;
-        public bool Selected;
+        public HexTile(int x, int y)
+        {
+            this.IndexX = x;
+            this.IndexY = y;
+        }
+
+        public int IndexX;
+        public int IndexY;
+        public Rectangle SourceRectangle = Rectangle.Empty;
+        public Vector2 Position = Vector2.Zero;        
+
+        public TileTypes TileType = TileTypes.Walkable;
+
+        public enum TileTypes
+        {
+            Walkable = 0,
+            Wall,
+        }
+
+        public bool Equals(HexTile node)
+        {
+            return (this.IndexX == node.IndexX && this.IndexY == node.IndexY);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as HexTile);
+        }
     }
 
     public class HexMapConfig {
@@ -25,14 +50,10 @@ namespace HexMapRenderer
     {
         #region Members
 
-        private HexMapConfig _config;
-
         private HexTile[,] _tiles;
       
         private Vector2 _tileHalfSize;
-        private Texture2D _tilesAsset;
-
-        private HexTile _selectedTile;
+        private Texture2D _tilesAsset;             
 
         private CameraService _camera;
 
@@ -42,6 +63,12 @@ namespace HexMapRenderer
         private float _W;
         private float _w;
         private float _k;
+
+        private static readonly IDictionary<HexTile.TileTypes, Color> _tileColors = new Dictionary<HexTile.TileTypes, Color>() 
+        { 
+            { HexTile.TileTypes.Walkable, Color.White}, 
+            { HexTile.TileTypes.Wall, Color.Brown},           
+        };
 
         #endregion Members
 
@@ -54,20 +81,20 @@ namespace HexMapRenderer
 
         public void Load(HexMapConfig config, Texture2D tilesAsset)
         {
-            _config = config;            
+            Config = config;            
 
             _tiles = new HexTile[config.TilesCountX, config.TilesCountY];
 
             _tilesAsset = tilesAsset;
 
-            _tileHalfSize = _config.TileSize * .5f;
+            _tileHalfSize = Config.TileSize * .5f;
 
-            _h = _config.TileSize.Y;
-            _W = _config.TileSize.X;
-            _w = _config.TileSize.X * _config.WidthScale;
+            _h = Config.TileSize.Y;
+            _W = Config.TileSize.X;
+            _w = Config.TileSize.X * Config.WidthScale;
             _k = (_W + _w) * .5f;
 
-            _mapFullBounds = new Rectangle(0, 0, _config.TilesCountX, _config.TilesCountY);
+            _mapFullBounds = new Rectangle(0, 0, Config.TilesCountX, Config.TilesCountY);
 
             SetupTiles();            
         }
@@ -82,18 +109,18 @@ namespace HexMapRenderer
                 {
                     var currTile = _tiles[x, y];
                     spriteBatch.Draw(_tilesAsset, currTile.Position, currTile.SourceRectangle, 
-                                     currTile.Selected ? Color.Red : Color.White, 
+                                     _tileColors[currTile.TileType],
                                      0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
                 }
             }
         }
 
         public void DrawDebug(SpriteBatch spriteBatch, SpriteFont font) {
-            var h = _config.TileSize.Y;
+            var h = Config.TileSize.Y;
             var hOver2 = h * .5f;
 
-            var W = _config.TileSize.X;
-            var w = _config.TileSize.X * 0.5f;            
+            var W = Config.TileSize.X;
+            var w = Config.TileSize.X * 0.5f;            
 
             var k = (W-w) * 0.5f;
 
@@ -130,7 +157,7 @@ namespace HexMapRenderer
                 {
                     var currTile = _tiles[x, y];
 
-                    FontHelpers.Print(spriteBatch, font, string.Format("{0},{1}", x, y), currTile.Position + _config.TileSize * .5f, 0.5f, Color.White, true);
+                    FontHelpers.Print(spriteBatch, font, string.Format("{0},{1}", x, y), currTile.Position + Config.TileSize * .5f, 0.5f, Color.White, true);
                 }
             }
         }
@@ -139,64 +166,7 @@ namespace HexMapRenderer
         /// http://gamedev.stackexchange.com/questions/20742/how-can-i-implement-hexagonal-tilemap-picking-in-xna
         /// </summary>
         /// <param name="screenCoords"></param>
-        public void SelectTile(ref Vector2 screenCoords) 
-        {
-            if (null != _selectedTile)
-            {
-                _selectedTile.Selected = false;
-                _selectedTile = null;
-            }
-
-            _selectedTile = PickTile(ref screenCoords);
-            if(null != _selectedTile)
-                _selectedTile.Selected = true;
-        }
-
-        private static bool IsEven(ref int value) {
-            return 0 == (value & 1);
-        }
-
-        #endregion Methods
-
-        #region Private Methods
-
-        private void SetupTiles()
-        {
-            var hexPos = Vector2.Zero;
-            
-            var sourceRect = new Rectangle(0, 0, (int)_config.TileSize.X, (int)_config.TileSize.Y);
-            var hexOffset = new Vector2(_config.TileSize.X * 0.75f, _config.TileSize.Y * -0.5f);
-
-            for (int y = 0; y != _tiles.GetLength(1); ++y)
-            {
-                // ISO
-                //hexPos.Y = _config.TileSize.Y * y * .5f;
-                //hexPos.X = hexOffset.X * y;     
-
-                // GRID
-                hexPos.Y = _config.TileSize.Y * y - hexOffset.Y;
-                hexPos.X = -hexOffset.X;
-
-                for (int x = 0; x != _tiles.GetLength(0); ++x)
-                {
-                    // ISO
-                    //hexPos += hexOffset;            
-        
-                    // GRID
-                    hexPos.X += hexOffset.X;
-                    hexPos.Y += ((x & 1) == 1) ? -hexOffset.Y : hexOffset.Y;
-
-                    _tiles[x, y] = new HexTile()
-                    {
-                        Selected = false,
-                        SourceRectangle = sourceRect,
-                        Position = hexPos
-                    };
-                }
-            }
-        }
-
-        private HexTile PickTile(ref Vector2 screenCoords)
+        public HexTile PickTile(ref Vector2 screenCoords)
         {
             var x = screenCoords.X + _camera.Position.X;
             var y = screenCoords.Y + _camera.Position.Y;
@@ -236,6 +206,71 @@ namespace HexMapRenderer
             return _tiles[i, j];
         }
 
+        public IEnumerable<HexTile> GetNeighbours(HexTile tile) {
+            var indexes_even = new[]{
+                new[]{-1,-1}, new[]{0,-1}, new[]{1,-1},
+                new[]{-1, 0}, new[] {0, 1}, new[]{1, 0},                            
+            };
+
+            var indexes_odd = new[]{
+                new[]{-1,0}, new[]{0,-1}, new[]{1,0},
+                new[]{-1, 1}, new[] {0, 1}, new[]{1, 1},                            
+            };
+
+            var indexes = IsEven(ref tile.IndexX) ? indexes_even : indexes_odd;
+
+            var maxX = _tiles.GetLength(0);
+            var maxY = _tiles.GetLength(1);
+
+            for (int i = 0; i != indexes.Length; ++i)
+            {
+                var nx = indexes[i][0] + tile.IndexX;
+                var ny = indexes[i][1] + tile.IndexY;
+                if (nx >= 0 && ny >= 0 && nx < maxX && ny < maxY)
+                    yield return _tiles[nx, ny];
+            }           
+        }
+
+        #endregion Methods
+
+        #region Private Methods
+
+        private void SetupTiles()
+        {
+            var hexPos = Vector2.Zero;
+            
+            var sourceRect = new Rectangle(0, 0, (int)Config.TileSize.X, (int)Config.TileSize.Y);
+            var hexOffset = new Vector2(Config.TileSize.X * 0.75f, Config.TileSize.Y * -0.5f);
+
+            for (int y = 0; y != _tiles.GetLength(1); ++y)
+            {
+                // ISO
+                //hexPos.Y = _config.TileSize.Y * y * .5f;
+                //hexPos.X = hexOffset.X * y;     
+
+                // GRID
+                hexPos.Y = Config.TileSize.Y * y - hexOffset.Y;
+                hexPos.X = -hexOffset.X;
+
+                for (int x = 0; x != _tiles.GetLength(0); ++x)
+                {
+                    // ISO
+                    //hexPos += hexOffset;            
+        
+                    // GRID
+                    hexPos.X += hexOffset.X;
+                    hexPos.Y += ((x & 1) == 1) ? -hexOffset.Y : hexOffset.Y;
+
+                    _tiles[x, y] = new HexTile(x,y)
+                    {                      
+                        SourceRectangle = sourceRect,
+                        Position = hexPos,
+                        TileType = HexTile.TileTypes.Walkable
+                    };
+                }
+            }
+        }
+            
         private Rectangle ComputeMapCulling()
         {   
             var midTile = PickTile(ref _camera.HalfScreenSize);
@@ -246,21 +281,37 @@ namespace HexMapRenderer
 
             var bounding = Rectangle.Empty;
 
-            bounding.X = (int)Math.Floor((midTileCenter.X - _camera.HalfScreenSize.X) / (_k / _camera.Zoom)) ;
-            bounding.Y = (int)Math.Floor((midTileCenter.Y - _camera.HalfScreenSize.Y) / (_config.TileSize.Y / _camera.Zoom));
+            bounding.X = (int)Math.Floor(((midTileCenter.X - _camera.HalfScreenSize.X) / _k) / _camera.Zoom) ;
+            bounding.Y = (int)Math.Floor(((midTileCenter.Y - _camera.HalfScreenSize.Y) / Config.TileSize.Y) / _camera.Zoom);
 
-            bounding.Width = (int)Math.Floor((midTileCenter.X + _camera.HalfScreenSize.X) / (_k / _camera.Zoom));
-            bounding.Height = (int)Math.Floor((midTileCenter.Y + _camera.HalfScreenSize.Y) / (_config.TileSize.Y / _camera.Zoom));        
+            bounding.Width = (int)Math.Floor(((midTileCenter.X + _camera.HalfScreenSize.X) / _k) / _camera.Zoom);
+            bounding.Height = (int)Math.Floor(((midTileCenter.Y + _camera.HalfScreenSize.Y) / Config.TileSize.Y) / _camera.Zoom);
 
-            bounding.X = bounding.X >= 0 ? bounding.X : 0;            
-            bounding.Y = bounding.Y >= 0 ? bounding.Y : 0;
-
-            bounding.Width = bounding.Width > _config.TilesCountX ? _config.TilesCountX : bounding.Width;
-            bounding.Height = bounding.Height > _config.TilesCountY ? _config.TilesCountY : bounding.Height;            
+            bounding.X = Clamp(bounding.X, 0, Config.TilesCountX - 1);
+            bounding.Y = Clamp(bounding.Y, 0, Config.TilesCountY - 1);
+            bounding.Width = Clamp(bounding.Width, 0, Config.TilesCountX - 1);
+            bounding.Height = Clamp(bounding.Height, 0, Config.TilesCountY - 1);
 
             return bounding;
         }
 
+        private static bool IsEven(ref int value)
+        {
+            return 0 == (value & 1);
+        }
+
+        private static int Clamp(int value, int min, int max) {
+            if (value >= min && value <= max) return value;
+            if (value < min) return min;
+            return max;
+        }
+
         #endregion Private Methods
+
+        #region Properties
+
+        public HexMapConfig Config { get; private set; }
+
+        #endregion Properties
     }
 }
