@@ -111,6 +111,8 @@
     <Compile Include="CameraService.cs" />
     <Compile Include="FontHelpers.cs" />
     <Compile Include="HexMap.cs" />
+    <Compile Include="MapInputController.cs" />
+    <Compile Include="PathFinder.cs" />
     <Compile Include="Primitives2D.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
