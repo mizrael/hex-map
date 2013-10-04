@@ -146,7 +146,7 @@ namespace HexMapRenderer
 
             var mousePosVec = new Vector2(mouseState.X, mouseState.Y);
 
-            _hoverTile = _map.PickTile(ref mousePosVec);
+            _hoverTile = _map.PickTile(mousePosVec);
 
             if (null != _hoverTile)
             {

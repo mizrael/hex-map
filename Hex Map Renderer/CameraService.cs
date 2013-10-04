@@ -18,7 +18,8 @@ namespace HexMapRenderer
         KeyboardState _lastState;
 
         Vector3 _pos3 = Vector3.Zero;
-        Vector3 _zoom3 = Vector3.One;
+
+        Matrix _scaleMatrix;
 
         #endregion Members
 
@@ -27,8 +28,10 @@ namespace HexMapRenderer
 
         public override void Initialize()
         {
-            this.HalfScreenSize = new Vector2(Game.GraphicsDevice.Viewport.Width * 0.5f, 
-                                              Game.GraphicsDevice.Viewport.Height * 0.5f);        
+            this.ScreenSize = new Vector2(Game.GraphicsDevice.Viewport.Width,
+                                          Game.GraphicsDevice.Viewport.Height);
+
+            this.HalfScreenSize = this.ScreenSize * .5f;
         }
 
         public override void Update(GameTime gameTime) {
@@ -56,11 +59,11 @@ namespace HexMapRenderer
             _pos3.X = -Position.X;
             _pos3.Y = -Position.Y;
 
-            _zoom3.X = Zoom;
-            _zoom3.Y = Zoom;            
+            Matrix.CreateTranslation(ref _pos3, out this.Matrix);
+            Matrix.CreateScale(this.Zoom, this.Zoom, 1, out _scaleMatrix);
+            Matrix.Multiply(ref this.Matrix, ref _scaleMatrix, out this.Matrix);
 
-            Matrix = Matrix.CreateTranslation(_pos3) *
-                     Matrix.CreateScale(_zoom3);
+            Matrix.Invert(ref this.Matrix, out this.InverseMatrix);
         }
 
         #region Properties
@@ -68,6 +71,8 @@ namespace HexMapRenderer
         public Vector2 Position = Vector2.Zero;
         public float Zoom = 1f;
         public Matrix Matrix;
+        public Matrix InverseMatrix;
+        public Vector2 ScreenSize = Vector2.Zero;
         public Vector2 HalfScreenSize = Vector2.Zero;
 
         #endregion Properties
