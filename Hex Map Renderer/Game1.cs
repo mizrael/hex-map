@@ -113,7 +113,11 @@ namespace HexMapRenderer
 #if DEBUG
             _hexMap.DrawDebug(spriteBatch, _font);
             var mouseState = Mouse.GetState();
-            FontHelpers.Print(spriteBatch, _font, string.Format("x: {0}, y: {1}", mouseState.X, mouseState.Y) , new Vector2(500, 0), 0.7f, Color.White, false);
+
+            var textPos = new Vector2(500, 0);
+            Vector2.Transform(ref textPos, ref _camera.InverseMatrix, out textPos);
+            FontHelpers.Print(spriteBatch, _font, string.Format("x: {0}, y: {1}, zoom: {2}", mouseState.X, mouseState.Y, _camera.Zoom),
+                              textPos, 0.7f, Color.White, false);
 #endif
 
             spriteBatch.End();

@@ -56,6 +56,8 @@ namespace HexMapRenderer
         private Texture2D _tilesAsset;             
 
         private CameraService _camera;
+        private Vector2 _topLeftScreenCoords;
+        private Vector2 _bottomRightScreenCoords;
 
         private Rectangle _mapFullBounds;
 
@@ -95,13 +97,15 @@ namespace HexMapRenderer
             _k = (_W + _w) * .5f;
 
             _mapFullBounds = new Rectangle(0, 0, Config.TilesCountX, Config.TilesCountY);
+            _topLeftScreenCoords = Config.TileSize * -1f;
+            _bottomRightScreenCoords = _camera.ScreenSize + Config.TileSize * new Vector2(1f, 2f);
 
             SetupTiles();            
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            var mapCullingBounds = ComputeMapCulling();
+            var mapCullingBounds = ComputeBoundTilesIndices();
 
             for (int y = mapCullingBounds.Y; y != mapCullingBounds.Height; ++y)
             {
@@ -124,7 +128,7 @@ namespace HexMapRenderer
 
             var k = (W-w) * 0.5f;
 
-            var mapCullingBounds = ComputeMapCulling();
+            var mapCullingBounds = ComputeBoundTilesIndices();
 
             for (int x = mapCullingBounds.X; x != mapCullingBounds.Width; ++x) {
                 var currTile = _tiles[x, 0];
@@ -160,22 +164,29 @@ namespace HexMapRenderer
                     FontHelpers.Print(spriteBatch, font, string.Format("{0},{1}", x, y), currTile.Position + Config.TileSize * .5f, 0.5f, Color.White, true);
                 }
             }
+
+            var midCenterTile = FindMidCenterTile();
+            if (null != midCenterTile) {
+
+                var position = midCenterTile.Position + Config.TileSize * .5f;             
+
+                spriteBatch.DrawCircle(position, _camera.Zoom * Config.TileSize.Y * 0.5f, 6, Color.PowderBlue, 3f);
+            }
         }
 
         /// <summary>      
         /// http://gamedev.stackexchange.com/questions/20742/how-can-i-implement-hexagonal-tilemap-picking-in-xna
         /// </summary>
         /// <param name="screenCoords"></param>
-        public HexTile PickTile(ref Vector2 screenCoords)
-        {
-            var x = screenCoords.X + _camera.Position.X;
-            var y = screenCoords.Y + _camera.Position.Y;
+        public HexTile PickTile(Vector2 screenCoords)
+        {                       
+            Vector2.Transform(ref screenCoords, ref _camera.InverseMatrix, out screenCoords);
 
-            var i = (int)Math.Floor((x / _k) / _camera.Zoom);
-            var j = (int)Math.Floor(((y * 2f) / _h) / _camera.Zoom);
+            var i = (int)Math.Floor(screenCoords.X / _k);
+            var j = (int)Math.Floor((screenCoords .Y * 2f) / _h);
 
-            var u = x - (_k * i);
-            var v = y - (_h * j * 0.5f);
+            var u = screenCoords.X - (_k * i);
+            var v = screenCoords.Y - (_h * j * 0.5f);
 
             var is_i_even = IsEven(ref i);
 
@@ -271,28 +282,30 @@ namespace HexMapRenderer
             }
         }
             
-        private Rectangle ComputeMapCulling()
-        {   
-            var midTile = PickTile(ref _camera.HalfScreenSize);
-            if (null == midTile)
-                return _mapFullBounds;
+        private Rectangle ComputeBoundTilesIndices()
+        {
+            var bounding = _mapFullBounds;
 
-            var midTileCenter = midTile.Position + _tileHalfSize;
+            var topLeftTile = PickTile(_topLeftScreenCoords);
+            if (null != topLeftTile)
+            {
+                bounding.X = topLeftTile.IndexX;
+                bounding.Y = topLeftTile.IndexY;
+            }
 
-            var bounding = Rectangle.Empty;
-
-            bounding.X = (int)Math.Floor(((midTileCenter.X - _camera.HalfScreenSize.X) / _k) / _camera.Zoom) ;
-            bounding.Y = (int)Math.Floor(((midTileCenter.Y - _camera.HalfScreenSize.Y) / Config.TileSize.Y) / _camera.Zoom);
-
-            bounding.Width = (int)Math.Floor(((midTileCenter.X + _camera.HalfScreenSize.X) / _k) / _camera.Zoom);
-            bounding.Height = (int)Math.Floor(((midTileCenter.Y + _camera.HalfScreenSize.Y) / Config.TileSize.Y) / _camera.Zoom);
-
-            bounding.X = Clamp(bounding.X, 0, Config.TilesCountX - 1);
-            bounding.Y = Clamp(bounding.Y, 0, Config.TilesCountY - 1);
-            bounding.Width = Clamp(bounding.Width, 0, Config.TilesCountX - 1);
-            bounding.Height = Clamp(bounding.Height, 0, Config.TilesCountY - 1);
+            var bottomRightTile = PickTile(_bottomRightScreenCoords);
+            if (null != bottomRightTile)
+            {
+                bounding.Width = bottomRightTile.IndexX;
+                bounding.Height = bottomRightTile.IndexY;
+            }           
 
             return bounding;
+        }
+
+        private HexTile FindMidCenterTile()
+        {
+            return PickTile(_camera.HalfScreenSize);      
         }
 
         private static bool IsEven(ref int value)
